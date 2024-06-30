@@ -1,0 +1,3 @@
+{
+    "connectionString": "mongodb+srv://admin:admin@travelplanner.xjgkikz.mongodb.net/?retryWrites=true&w=majority&appName=travelplanner"
+}
