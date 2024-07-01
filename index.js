@@ -98,17 +98,14 @@ app.post("/login", async (req, res) => {
 
 // Get user
 app.get("/get-user", authenticateToken, async (req, res) => {
-    const userId = req.params.userId;
-
     try {
-        const isUser = await User.findOne(userId);
-        if (!isUser) {
-            return res.status(404).json({ error: true, message: "User not found" });
-        }
-        res.json({ fullName: isUser.fullName, email: isUser.email, "_id": isUser._id, createdOn: isUser.createdOn });
-    } catch (err) {
-        console.error("Error fetching user", err);
-        res.status(500).json({ error: true, message: "Internal Server Error" });
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ error: true, message: "User not found" });
+
+        res.json(user);
+    } catch (error) {
+        console.error("Error fetching user info:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -182,6 +179,7 @@ app.get("/get-all-trips", authenticateToken, async (req, res) => {
     }
 });
 
+
 // Delete Trip
 app.delete("/delete-trip/:tripId", authenticateToken, async (req, res) => {
     const tripId = req.params.tripId;
@@ -230,6 +228,31 @@ app.put("/update-bookmark/:tripId", authenticateToken, async (req, res) => {
     }
 });
 
+// Search trips
+app.get("/search-trips/", authenticateToken, async (req, res) => {
+    const { query } = req.query;
+    const userId = req.user.userId;
+
+    if(!query) {
+        return res.status(400).json({ error: true, message: "Search query is required" });
+    }
+
+    try {
+        const matchingTrips = await Trip.find({
+            userId,
+            $or: [
+                { title: {$regex: new RegExp(query, "i") } },
+                { content: {$regex: new RegExp(query, "i") } },
+                { tags: {$in: query.split(',').map(tag => tag.trim()) } }
+            ],
+        });
+        return res.json({ error: false, trips: matchingTrips, message: "Matching trips found" });
+    } catch (err) {
+        return res
+        .status(500)
+        .json({ error: true, message: "Internal Server Error" });
+    }
+});
 
 
 
