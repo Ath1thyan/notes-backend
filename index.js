@@ -184,6 +184,37 @@ app.delete("/delete-trip/:tripId", authenticateToken, async (req, res) => {
     }
 });
 
+// Update isBookMarked
+app.put("/update-bookmark/:tripId", authenticateToken, async (req, res) => {
+    const tripId = req.params.tripId;
+    const userId = req.user.userId; // Access userId directly from req.user
+    const { isBookMarked } = req.body;
+
+    try {
+        const trip = await Trip.findOne(
+            { _id: tripId, userId: userId },
+        );
+
+        if (!trip) {
+            return res.status(404).json({ error: true, message: "Trip not found" });
+        }
+
+        // Update the isBookMarked field
+        trip.isBookMarked = isBookMarked || false;
+        await trip.save();
+
+        res.json({
+            error: false,
+            message: "Bookmark updated successfully",
+            trip
+        });
+    } catch (err) {
+        console.error("Error updating bookmark", err);
+        res.status(500).json({ error: true, message: "Internal Server Error" });
+    }
+});
+
+
 
 
 app.listen(8000, () => {
