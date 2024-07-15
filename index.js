@@ -22,7 +22,11 @@ mongoose.connect(config.connectionString)
     });
 
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+app.use(cors({ 
+    origin: "",
+    methods: [ "GET", "POST" ],
+    credentials: true
+}));
 
 // app.get("/", (req, res) => {
 //     res.json({ message: "Hello from the server!" });
