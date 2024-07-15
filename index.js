@@ -24,9 +24,9 @@ mongoose.connect(config.connectionString)
 app.use(express.json());
 app.use(cors({ origin: "*" }));
 
-app.get("/", (req, res) => {
-    res.json({ message: "Hello from the server!" });
-});
+// app.get("/", (req, res) => {
+//     res.json({ message: "Hello from the server!" });
+// });
 
 // create account
 app.post("/create-account", async (req, res) => {
@@ -67,6 +67,36 @@ app.post("/create-account", async (req, res) => {
 
 // login
 app.post("/login", async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ error: true, message: "Email is required" });
+    }
+    if (!password) {
+        return res.status(400).json({ error: true, message: "Password is required" });
+    }
+
+    try {
+        const userInfo = await User.findOne({ email });
+        if (!userInfo) {
+            return res.status(400).json({ error: true, message: "User not found" });
+        }
+
+        const isMatch = await bcrypt.compare(password, userInfo.password);
+        if (!isMatch) {
+            return res.status(400).json({ error: true, message: "Invalid credentials" });
+        }
+
+        const accessToken = jwt.sign({ userId: userInfo._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "36000m" });
+        res.json({ error: false, message: "Logged in successfully", accessToken });
+
+    } catch (err) {
+        console.error("Error logging in", err);
+        res.status(500).json({ error: true, message: "Internal Server Error" });
+    }
+});
+// login
+app.post("/", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email) {
